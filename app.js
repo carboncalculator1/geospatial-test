@@ -218,23 +218,59 @@ function updateLegend(min, max){
   `;
 }
 
-// Simple polygon centroid for Polygons (not for MultiPolygon)
+// centroid: returns [lng, lat] for Point, Polygon, or MultiPolygon
 function centroid(geom){
-  if (!geom || geom.type !== 'Polygon') return [0,0];
-  const ring = geom.coordinates[0] || [];
-  let area = 0, x=0, y=0;
-  for (let i=0,j=ring.length-1;i<ring.length;j=i++){
-    const [x0,y0] = ring[j];
-    const [x1,y1] = ring[i];
-    const f = x0*y1 - x1*y0;
-    area += f;
-    x += (x0 + x1) * f;
-    y += (y0 + y1) * f;
+  if (!geom) return [0,0];
+
+  // GeoJSON Point: coordinates are [lng, lat]
+  if (geom.type === 'Point') {
+    const [lng = 0, lat = 0] = geom.coordinates || [];
+    return [lng, lat];
   }
-  if (area === 0) return [ring[0]?.[0]||0, ring[0]?.[1]||0];
-  area *= 0.5;
-  return [x/(6*area), y/(6*area)];
+
+  // MultiPolygon: use first polygon's outer ring
+  if (geom.type === 'MultiPolygon') {
+    const firstPoly = geom.coordinates && geom.coordinates[0];
+    if (firstPoly && firstPoly[0]) {
+      // firstPoly[0] is the outer ring array of [lng,lat] pairs
+      const ring = firstPoly[0];
+      if (ring.length) {
+        // fall through to polygon centroid calculation below using ring
+        geom = { type: 'Polygon', coordinates: [ring] };
+      } else {
+        return [0,0];
+      }
+    } else {
+      return [0,0];
+    }
+  }
+
+  // Polygon: compute centroid of outer ring (returns [lng, lat])
+  if (geom.type === 'Polygon') {
+    const ring = geom.coordinates && geom.coordinates[0] || [];
+    if (ring.length === 0) return [0,0];
+
+    let area = 0, cx = 0, cy = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [x0 = 0, y0 = 0] = ring[j]; // x = lng, y = lat
+      const [x1 = 0, y1 = 0] = ring[i];
+      const f = x0 * y1 - x1 * y0;
+      area += f;
+      cx += (x0 + x1) * f;
+      cy += (y0 + y1) * f;
+    }
+    if (area === 0) {
+      // fallback: return first coordinate
+      return [ring[0]?.[0] || 0, ring[0]?.[1] || 0];
+    }
+    area *= 0.5;
+    return [cx / (6 * area), cy / (6 * area)];
+  }
+
+  // fallback for unsupported geometry types
+  return [0,0];
 }
+
 
 // ====== CHART ======
 function initChart(){
@@ -280,3 +316,4 @@ async function loadGeoJSON(){
   // build initial overlay
   buildChoropleth();
 })();
+
