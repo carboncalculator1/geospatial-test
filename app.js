@@ -207,6 +207,17 @@ function updateVisualization(){
   }
 }
 
+function updateLegend(min, max){
+  const legend = document.getElementById('legend');
+  legend.innerHTML = `
+    <div class="row">
+      <div>Emissions (kg CO₂e)</div>
+      <div class="scale"></div>
+      <div class="ticks"><span>${formatNumber(min)}</span><span>${formatNumber((min+max)/2)}</span><span>${formatNumber(max)}</span></div>
+    </div>
+  `;
+}
+
 // centroid: returns [lng, lat] for Point, Polygon, or MultiPolygon
 function centroid(geom){
   if (!geom) return [0,0];
@@ -319,6 +330,7 @@ async function loadGeoJSON(){
   // build initial overlay
   buildChoropleth();
 })();
+
 
 
 
