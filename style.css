@@ -158,7 +158,10 @@ body{
     right: 16px;            /* adjust legend for smaller screens */
     bottom: 16px;
   }
+  .stats .label{color:var(--muted);margin-right:6px}
+  .unit{color:var(--muted);font-size:12px;margin-left:4px}
 }
+
 
 
 
