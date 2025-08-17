@@ -131,3 +131,29 @@ body{
   color:#fff;
   border-bottom:1px solid var(--border);
 }
+
+/* Mobile view */
+@media (max-width: 768px) {
+  #app {
+    flex-direction: column; /* stack sidebar above map */
+    height: auto;           /* let it grow with content */
+  }
+
+  .sidebar {
+    width: 100%;            /* full width */
+    max-width: 100%;
+    border-left: none;      /* remove left border */
+    border-bottom: 1px solid var(--border); /* optional bottom border */
+  }
+
+  #map {
+    height: 60vh;           /* give map a height on mobile */
+    flex: none;             /* don't grow automatically */
+  }
+
+  .legend {
+    right: 16px;            /* adjust legend position */
+    bottom: 16px;
+  }
+}
+
