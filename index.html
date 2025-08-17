@@ -9,6 +9,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <!-- Leaflet.heat (optional heat layer) -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
   <!-- Chart.js for the line chart -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
@@ -35,15 +38,12 @@
           Basemap:
           <select id="basemapSelect">
             <option value="osm">OpenStreetMap</option>
-            <option value="esri">ESRI World Imagery</option>
-            <option value="toner">Stamen Toner (B/W)</option>
           </select>
         </label>
         <label>
           Overlay:
           <select id="overlayMode">
             <option value="choropleth">Choropleth (polygons)</option>
-            <option value="heat">Heatmap (points)</option>
           </select>
         </label>
       </section>
@@ -76,6 +76,7 @@
 </body>
 
 </html>
+
 
 
 
