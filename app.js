@@ -230,19 +230,33 @@ function centroid(geom){
 
   // MultiPolygon: use first polygon's outer ring
   if (geom.type === 'MultiPolygon') {
-    const firstPoly = geom.coordinates && geom.coordinates[0];
-    if (firstPoly && firstPoly[0]) {
-      // firstPoly[0] is the outer ring array of [lng,lat] pairs
-      const ring = firstPoly[0];
-      if (ring.length) {
-        // fall through to polygon centroid calculation below using ring
-        geom = { type: 'Polygon', coordinates: [ring] };
-      } else {
-        return [0,0];
+    // For each polygon take its outer ring centroid and area, then compute area-weighted mean
+    const polys = geom.coordinates || [];
+    let totalArea = 0;
+    let weightedX = 0;
+    let weightedY = 0;
+
+    for (let p = 0; p < polys.length; p++) {
+      const poly = polys[p];
+      if (!poly || !poly[0] || poly[0].length === 0) continue;
+      const outer = poly[0]; // outer ring
+      // compute polygon area (signed area*0.5)
+      let area2 = 0; // will be 2*area (signed)
+      for (let i = 0, j = outer.length - 1; i < outer.length; j = i++) {
+        const [x0 = 0, y0 = 0] = outer[j];
+        const [x1 = 0, y1 = 0] = outer[i];
+        area2 += x0 * y1 - x1 * y0;
       }
-    } else {
-      return [0,0];
+      const area = Math.abs(area2) * 0.5;
+      if (area === 0) continue;
+      const [cx, cy] = polygonCentroidCoords(outer);
+      totalArea += area;
+      weightedX += cx * area;
+      weightedY += cy * area;
     }
+
+    if (totalArea === 0) return [0, 0];
+    return [weightedX / totalArea, weightedY / totalArea];
   }
 
   // Polygon: compute centroid of outer ring (returns [lng, lat])
@@ -316,4 +330,5 @@ async function loadGeoJSON(){
   // build initial overlay
   buildChoropleth();
 })();
+
 
