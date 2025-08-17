@@ -132,28 +132,33 @@ body{
   border-bottom:1px solid var(--border);
 }
 
-/* Mobile view */
+/* Mobile layout: map on top, sidebar below */
 @media (max-width: 768px) {
   #app {
-    flex-direction: column; /* stack sidebar above map */
-    height: auto;           /* let it grow with content */
-  }
-
-  .sidebar {
-    width: 100%;            /* full width */
-    max-width: 100%;
-    border-left: none;      /* remove left border */
-    border-bottom: 1px solid var(--border); /* optional bottom border */
+    flex-direction: column; /* stack vertically */
+    height: auto;           /* allow content to expand */
   }
 
   #map {
-    height: 60vh;           /* give map a height on mobile */
-    flex: none;             /* don't grow automatically */
+    height: 50vh;           /* map takes half the viewport height */
+    width: 100%;
+    flex: none;             /* don't stretch */
+  }
+
+  .sidebar {
+    width: 100%;            /* full width below map */
+    max-width: 100%;
+    border-left: none;      /* remove side border */
+    border-top: 1px solid var(--border); /* optional top border */
+    border-radius: 0;       /* optional: remove rounded corners */
+    padding: 16px;
   }
 
   .legend {
-    right: 16px;            /* adjust legend position */
+    right: 16px;            /* adjust legend for smaller screens */
     bottom: 16px;
   }
 }
+
+
 
