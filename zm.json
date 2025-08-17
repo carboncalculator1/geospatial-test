@@ -7890,6 +7890,7 @@
         "source": "https://simplemaps.com", 
         "id": "ZM09", 
         "name": "Lusaka"
+        "emissionHistory": [20,30,45,55,60,70,80,75,65,50,35,25]
       }, 
       "id": 4
     }, 
