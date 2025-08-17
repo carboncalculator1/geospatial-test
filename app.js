@@ -317,7 +317,7 @@ function updateChart(arr){
 
 // ====== LOAD DATA & BOOT ======
 async function loadGeoJSON(){
-  const res = await fetch('regions.geojson');
+  const res = await fetch('zm.json');
   return res.json();
 }
 
@@ -330,5 +330,6 @@ async function loadGeoJSON(){
   // build initial overlay
   buildChoropleth();
 })();
+
 
 
