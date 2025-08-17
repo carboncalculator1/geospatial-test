@@ -1,14 +1,3 @@
-// approximate Zambia bounds (latLng order)
-const ZAMBIA_BOUNDS = L.latLngBounds(
-  L.latLng(-18.20, 21.85), // SW
-  L.latLng(-8.05, 33.75)   // NE
-);
-
-// convert GeoJSON [lng,lat] arrays -> Leaflet [lat,lng]
-function toLatLngArray(ring){
-  return ring.map(([lng, lat]) => [lat, lng]);
-}
-
 // ====== CONFIG ======
 const MONTHS = [
   "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
@@ -91,76 +80,24 @@ function initSelectors(){
 // ====== MAP ======
 function initMap(){
   map = L.map('map', {
-    center: [-15.3875, 28.3228], // Lusaka
-    zoom: 6,
-    worldCopyJump: false
+    center: [0, 20],
+    zoom: 2,
+    worldCopyJump: true, // allows panning infinitely horizontally
   });
 
-  // strongly prevent panning out of Zambia
-  map.setMaxBounds(ZAMBIA_BOUNDS);
-  map.options.maxBoundsViscosity = 1.0;
-
-  // base layers: add bounds to limit tile requests
   baseLayers = {
     osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution:'© OpenStreetMap',
-      bounds: ZAMBIA_BOUNDS
+      attribution:'© OpenStreetMap'
     }),
     esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
-      attribution:'Tiles © Esri',
-      bounds: ZAMBIA_BOUNDS
+      attribution:'Tiles © Esri'
     }),
     toner: L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png',{
-      attribution:'Map tiles by Stamen',
-      bounds: ZAMBIA_BOUNDS
+      attribution:'Map tiles by Stamen'
     })
   };
-
-  // start with OSM
   baseLayers.osm.addTo(map);
 }
-
-// feature: a GeoJSON Feature for Zambia (Polygon or MultiPolygon)
-function addCountryMask(feature){
-  if (!feature || !feature.geometry) return;
-
-  // get first polygon ring for the country (for MultiPolygon, take the first polygon)
-  let polygonCoords;
-  if (feature.geometry.type === 'MultiPolygon') {
-    // MultiPolygon: coordinates[0] is the first polygon, [0] is its outer ring
-    polygonCoords = feature.geometry.coordinates[0][0];
-  } else if (feature.geometry.type === 'Polygon') {
-    polygonCoords = feature.geometry.coordinates[0];
-  } else {
-    console.warn('Country geometry type not supported for mask:', feature.geometry.type);
-    return;
-  }
-
-  const hole = toLatLngArray(polygonCoords);
-
-  // outer ring covering the whole world (lat,lng)
-  const outer = [
-    [90, -180],
-    [90,  180],
-    [-90, 180],
-    [-90, -180]
-  ];
-
-  // polygon with hole: outer first, then hole (Leaflet supports this array-of-rings format)
-  const mask = L.polygon([outer, hole], {
-    color: '#000',
-    weight: 0,
-    fillOpacity: 0.6,
-    interactive: false // allow clicks through to underlying layers
-  }).addTo(map);
-
-  // zoom/focus to the country precisely
-  try {
-    const countryLayer = L.geoJSON(feature);
-    map.fitBounds(countryLayer.getBounds().pad(0.10));
-  } catch(e){ console.warn(e); }
-}
-
 
 function setBasemap(key){
   Object.values(baseLayers).forEach(l=>map.removeLayer(l));
@@ -206,51 +143,33 @@ function buildChoropleth(){
     choroplethLayer = null;
   }
   const {min,max} = computeMinMax(GEOJSON_DATA.features, currentMonthIdx);
-
   choroplethLayer = L.geoJSON(GEOJSON_DATA, {
-    pointToLayer: function(feature, latlng){
-      // use emission value to style the marker
-      const v = feature.properties.emissionHistory?.[currentMonthIdx];
-      const style = {
-        radius: 10,
-        fillColor: colorForValue(v, min, max),
-        color: '#222',
-        weight: 1,
-        fillOpacity: 0.85
-      };
-      return L.circleMarker(latlng, style);
-    },
-    style: styleFeatureFactory(min,max), // in case you still have polygons
+    style: styleFeatureFactory(min,max),
     onEachFeature
   }).addTo(map);
-
   updateLegend(min,max);
-
-  // fit bounds the first time to the data (keeps you inside Zambia because data is Zambia-based)
+  // fit bounds on first load
   if (!map._fitOnce) {
-    const b = choroplethLayer.getBounds();
-    if (b.isValid && !b.isEmpty()) {
-      map.fitBounds(b.pad(0.25));
-    }
+    map.fitBounds(choroplethLayer.getBounds(), {padding:[20,20]});
     map._fitOnce = true;
   }
 }
-
 
 function buildHeat(){
   if (heatLayer) {
     map.removeLayer(heatLayer);
     heatLayer = null;
   }
-  // Convert features to [lat, lng, intensity]
-  const {min,max} = computeMinMax(GEOJSON_DATA.features, currentMonthIdx);
+  // Convert polygon centroids to points with intensity
   const pts = GEOJSON_DATA.features.map(f=>{
     const v = f.properties.emissionHistory?.[currentMonthIdx] ?? 0;
-    // handle Point or Polygon centroid
-    let [lng, lat] = centroid(f.geometry);
+    const [lng, lat] = centroid(f.geometry);
+    // leaflet-heat expects: [lat, lng, intensity]
+    // Normalize intensity 0..1 across dataset
     return [lat, lng, v];
   });
 
+  const {min,max} = computeMinMax(GEOJSON_DATA.features, currentMonthIdx);
   const norm = (v)=> (v - min) / (max - min || 1);
   const normalized = pts.map(([lat,lng,v])=>[lat,lng, Math.max(0,Math.min(1,norm(v))) || 0.01]);
 
@@ -262,7 +181,6 @@ function buildHeat(){
 
   updateLegend(min,max);
 }
-
 
 function setOverlay(mode){
   if (mode === 'heat'){
@@ -300,38 +218,23 @@ function updateLegend(min, max){
   `;
 }
 
-
-// centroid: returns [lng, lat] for Polygon or Point
+// Simple polygon centroid for Polygons (not for MultiPolygon)
 function centroid(geom){
-  if (!geom) return [0,0];
-
-  if (geom.type === 'Point') {
-    // GeoJSON Point coords are [lng, lat]
-    const [lng, lat] = geom.coordinates;
-    return [lng, lat];
+  if (!geom || geom.type !== 'Polygon') return [0,0];
+  const ring = geom.coordinates[0] || [];
+  let area = 0, x=0, y=0;
+  for (let i=0,j=ring.length-1;i<ring.length;j=i++){
+    const [x0,y0] = ring[j];
+    const [x1,y1] = ring[i];
+    const f = x0*y1 - x1*y0;
+    area += f;
+    x += (x0 + x1) * f;
+    y += (y0 + y1) * f;
   }
-
-  if (geom.type === 'Polygon') {
-    const ring = geom.coordinates[0] || [];
-    if (ring.length === 0) return [0,0];
-    let area = 0, x=0, y=0;
-    for (let i=0,j=ring.length-1;i<ring.length;j=i++){
-      const [x0,y0] = ring[j];
-      const [x1,y1] = ring[i];
-      const f = x0*y1 - x1*y0;
-      area += f;
-      x += (x0 + x1) * f;
-      y += (y0 + y1) * f;
-    }
-    if (area === 0) return [ring[0][0] || 0, ring[0][1] || 0];
-    area *= 0.5;
-    return [x/(6*area), y/(6*area)];
-  }
-
-  // fallback for other geometry types
-  return [0,0];
+  if (area === 0) return [ring[0]?.[0]||0, ring[0]?.[1]||0];
+  area *= 0.5;
+  return [x/(6*area), y/(6*area)];
 }
-
 
 // ====== CHART ======
 function initChart(){
@@ -368,44 +271,12 @@ async function loadGeoJSON(){
   return res.json();
 }
 
-async function loadZambiaFeature(){
-  const res = await fetch('zambia.geo'); // put the big file into /data/ in your project
-  const data = await res.json();
-  // try a few common property names for the ISO3 code or name
-  const z = data.features.find(f =>
-    (f.properties && (
-      f.properties.ISO_A3 === 'ZMB' ||
-      f.properties.ISO3166_1_Alpha_3 === 'ZMB' ||
-      f.properties['ISO3166-1-Alpha-3'] === 'ZMB' ||
-      /zambia/i.test(f.properties.ADMIN || f.properties.name || f.properties.admin || '')
-    ))
-  );
-  if (!z) throw new Error('Zambia feature not found in countries.geojson');
-  return z;
-}
-
-
 (async function boot(){
   initMap();
   initSelectors();
   initChart();
-
-  // load your regions
   GEOJSON_DATA = await loadGeoJSON();
 
-  // build initial overlay for your regions
+  // build initial overlay
   buildChoropleth();
-
-  // --- load country polygon and add mask ---
-  try {
-    // Option A: load the full countries.geojson from your /data/ folder and extract Zambia
-    const zFeature = await loadZambiaFeature(); // (function from D(1))
-    addCountryMask(zFeature);
-  } catch(err){
-    console.warn('Could not add Zambia mask:', err);
-    // Optionally fetch a single zambia.geo instead:
-    // const z = await (await fetch('zambia.geo')).json();
-    // addCountryMask(z.features ? z.features[0] : z);
-  }
 })();
-
