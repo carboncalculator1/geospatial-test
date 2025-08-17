@@ -130,7 +130,7 @@ function onEachFeature(feature, layer){
     updateChart(feature.properties.emissionHistory);
   });
   layer.on('mouseover', (e)=> {
-    e.target.setStyle({weight:2});
+    e.target.setStyle({weight:4});
   });
   layer.on('mouseout', (e)=> {
     e.target.setStyle({weight:1});
@@ -330,6 +330,7 @@ async function loadGeoJSON(){
   // build initial overlay
   buildChoropleth();
 })();
+
 
 
 
