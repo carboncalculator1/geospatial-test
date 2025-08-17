@@ -110,10 +110,12 @@ let GEOJSON_DATA = null;
 function styleFeatureFactory(min, max){
   return function style(feature){
     const v = feature.properties.emissionHistory?.[currentMonthIdx];
+    let weight = 1; // default weight
+    if (activeFeature === feature) weight = 3; // selected feature weight
     return {
       fillColor: colorForValue(v, min, max),
       color: '#222',
-      weight: 3,
+      weight: weight,
       fillOpacity: 0.65
     };
   };
@@ -122,6 +124,9 @@ function styleFeatureFactory(min, max){
 function onEachFeature(feature, layer){
   layer.on('click', ()=>{
     activeFeature = feature;
+    // Reset all layers to default weight except the active one
+    geoJsonLayer.eachLayer(l => l.setStyle(styleFeatureFactory(minValue, maxValue)(l.feature)));
+    
     const name = feature.properties.name || 'Region';
     const v = feature.properties.emissionHistory?.[currentMonthIdx];
     document.getElementById('regionTitle').textContent = name;
@@ -129,13 +134,18 @@ function onEachFeature(feature, layer){
     document.getElementById('infoEmission').textContent = formatNumber(v);
     updateChart(feature.properties.emissionHistory);
   });
-  layer.on('mouseover', (e)=> {
+
+  layer.on('mouseover', (e) => {
     e.target.setStyle({weight:4});
   });
-  layer.on('mouseout', (e)=> {
-    e.target.setStyle({weight:1});
+
+  layer.on('mouseout', (e) => {
+    // If it's the active feature, keep weight 3, otherwise 1
+    const weight = (activeFeature === feature) ? 3 : 1;
+    e.target.setStyle({weight: weight});
   });
 }
+
 
 function buildChoropleth(){
   if (choroplethLayer) {
@@ -330,6 +340,7 @@ async function loadGeoJSON(){
   // build initial overlay
   buildChoropleth();
 })();
+
 
 
 
