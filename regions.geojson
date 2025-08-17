@@ -5,18 +5,18 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "Region A",
+        "name": "Lusaka City",
         "emissionHistory": [20,30,45,55,60,70,80,75,65,50,35,25]
       },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [[[27.5,-16],[29.5,-16],[29.5,-14],[27.5,-14],[27.5,-16]]]
+        "coordinates": [28.3228, -15.3875]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "name": "Region B",
+        "name": "Kitwe",
         "emissionHistory": [10,12,15,18,25,30,35,33,28,22,16,12]
       },
       "geometry": {
@@ -27,7 +27,7 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "Region C",
+        "name": "Livingstone",
         "emissionHistory": [50,55,60,62,68,72,90,95,85,70,58,52]
       },
       "geometry": {
@@ -37,4 +37,5 @@
     }
   ]
 }
+
 
