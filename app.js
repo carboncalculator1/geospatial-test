@@ -113,7 +113,7 @@ function styleFeatureFactory(min, max){
     return {
       fillColor: colorForValue(v, min, max),
       color: '#222',
-      weight: 1,
+      weight: 3,
       fillOpacity: 0.65
     };
   };
@@ -330,6 +330,7 @@ async function loadGeoJSON(){
   // build initial overlay
   buildChoropleth();
 })();
+
 
 
 
