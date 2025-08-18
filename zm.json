@@ -2597,7 +2597,8 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ZM10", 
-        "name": "Muchinga"
+        "name": "Muchinga",
+        "emissionHistory": [50,55,60,62,68,72,90,95,85,70,58,52]
       }, 
       "id": 1
     }, 
@@ -4289,7 +4290,8 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ZM03", 
-        "name": "Eastern"
+        "name": "Eastern",
+        "emissionHistory": [50,55,60,62,68,72,90,95,85,70,58,52]
       }, 
       "id": 2
     }, 
@@ -6921,7 +6923,8 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ZM05", 
-        "name": "Northern"
+        "name": "Northern",
+        "emissionHistory": [50,55,60,62,68,72,90,95,85,70,58,52]
       }, 
       "id": 3
     }, 
@@ -17900,7 +17903,8 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ZM06", 
-        "name": "North-Western"
+        "name": "North-Western",
+        "emissionHistory": [20,30,45,55,60,70,80,75,65,50,35,25]
       }, 
       "id": 7
     }, 
@@ -21072,7 +21076,8 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ZM04", 
-        "name": "Luapula"
+        "name": "Luapula",
+        "emissionHistory": [50,55,60,62,68,72,90,95,85,70,58,52]
       }, 
       "id": 8
     }, 
@@ -22864,7 +22869,8 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ZM08", 
-        "name": "Copperbelt"
+        "name": "Copperbelt",
+        "emissionHistory": [50,55,60,62,68,72,90,95,85,70,58,52]
       }, 
       "id": 9
     }, 
@@ -26476,7 +26482,8 @@
       "properties": {
         "source": "https://simplemaps.com", 
         "id": "ZM02", 
-        "name": "Central"
+        "name": "Central",
+        "emissionHistory": [50,55,60,62,68,72,90,95,85,70,58,52]
       }, 
       "id": 10
     }
