@@ -87,6 +87,8 @@ function saveEmissions() {
 
 // ====== Boot ======
 (function boot() {
+  if (!userData.emissions) userData.emissions = {};
   initYearSelector();
   populateMonthInputs();
 })();
+
