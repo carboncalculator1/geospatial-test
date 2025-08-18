@@ -51,66 +51,33 @@ function formatNumber(n){
   return (n==null || isNaN(n)) ? '—' : n.toLocaleString(undefined,{maximumFractionDigits:2});
 }
 
-// returns an emissions array of length 12 for that feature+year, or null
+// returns an emissions array of length 12 for that feature+year
 function getEmissionsForYear(feature, year){
-  if (!feature || !feature.properties) return null;
+  if (!feature || !feature.properties) return new Array(12).fill(0);
   const e = feature.properties.emissions;
-  if (!e) return null;
-  return e[String(year)] || null;
+  if (!e) return new Array(12).fill(0);
+  return e[String(year)] || new Array(12).fill(0);
 }
 
-// create/ensure emissions data structure on each feature
+// create emissions data structure on each feature (but default to zero arrays)
 function ensureEmissionsOnFeatures(features){
   features.forEach(f=>{
     if (!f.properties) f.properties = {};
-    // If existing legacy emissionHistory present and it's length 12, treat as 2024 if 2024 missing
     if (!f.properties.emissions) f.properties.emissions = {};
-    if (!f.properties.emissions['2024'] && Array.isArray(f.properties.emissionHistory) && f.properties.emissionHistory.length === 12) {
-      f.properties.emissions['2024'] = f.properties.emissionHistory.slice();
-    }
-    // Ensure every year in YEARS has an array; if missing create random placeholders
+
     YEARS.forEach(y=>{
       if (!f.properties.emissions[String(y)] || !Array.isArray(f.properties.emissions[String(y)])) {
-        // generate random, but try to be aged: older years slightly lower/higher? keep simple
-        f.properties.emissions[String(y)] = generateRandomSeriesForFeature(f, y);
-      } else {
-        // normalize if length != 12
-        if (f.properties.emissions[String(y)].length !== 12) {
-          const arr = new Array(12).fill(null).map((_,i)=> Number(f.properties.emissions[String(y)][i]) || null);
-          f.properties.emissions[String(y)] = arr;
-        }
+        f.properties.emissions[String(y)] = new Array(12).fill(0);
+      } else if (f.properties.emissions[String(y)].length !== 12) {
+        const arr = new Array(12).fill(0).map((_,i)=> Number(f.properties.emissions[String(y)][i]) || 0);
+        f.properties.emissions[String(y)] = arr;
       }
     });
   });
 }
 
-// Simple random series generator (deterministic-ish not required)
-function generateRandomSeriesForFeature(feature, year){
-  // Make random values in a reasonable range. Use a hash from coordinates to add some variance per feature.
-  let seed = 1;
-  try {
-    const coords = JSON.stringify(feature.geometry?.coordinates?.slice(0,3) || '');
-    for(let i=0;i<coords.length;i++){ seed = (seed * 31 + coords.charCodeAt(i)) % 9973; }
-    seed = (seed + year) % 9973;
-  } catch(e){}
-  const rnd = ()=> {
-    // simple LCG
-    seed = (seed * 1664525 + 1013904223) % 4294967296;
-    return (seed % 1000) / 1000;
-  };
-  // base amplitude vary per feature
-  const base = 20 + Math.floor(rnd() * 200); // between ~20 and 220
-  const seasonal = Array.from({length:12}, (_,i)=> {
-    const seasonalFactor = 0.6 + 0.8 * Math.abs(Math.sin((i / 12) * Math.PI * 2)); // some seasonality
-    const noise = rnd() * 0.5 + 0.75;
-    return Math.round((base * seasonalFactor * noise) * 100) / 100;
-  });
-  return seasonal;
-}
-
 // ====== INIT UI ======
 function initSelectors(){
-  // Year select
   const yearSelect = document.getElementById('yearSelect');
   YEARS.forEach(y=>{
     const opt = document.createElement('option');
@@ -126,7 +93,6 @@ function initSelectors(){
   });
   document.getElementById('yearInfo').textContent = currentYear;
 
-  // Month select
   const monthSelect = document.getElementById('monthSelect');
   MONTHS.forEach((m,i)=>{
     const opt = document.createElement('option');
@@ -178,17 +144,28 @@ function setBasemap(key){
   (baseLayers[key] || baseLayers.osm).addTo(map);
 }
 
+// ====== Load GeoJSON ======
+fetch("zm.json")
+  .then(res => res.json())
+  .then(data => {
+    geojsonLayer = L.geoJSON(data, {
+      style: styleFeature,
+      onEachFeature: onEachFeature
+    }).addTo(map);
+  });
+
 // ====== DATA + LAYERS ======
-function styleFeatureFactory(min, max){
-  return function style(feature){
-    const arr = getEmissionsForYear(feature, currentYear) || [];
-    const v = arr[currentMonthIdx];
-    return {
-      fillColor: colorForValue(v, min, max),
-      color: '#222',
-      weight: 1,
-      fillOpacity: 0.65
-    };
+function styleFeature(feature) {
+  let emissions = 0;
+  const arr = getEmissionsForYear(feature, currentYear);
+  emissions = arr[currentMonthIdx] || 0;
+  
+  return {
+    fillColor: getColor(emissions),
+    weight: 1,
+    opacity: 1,
+    color: "#333",
+    fillOpacity: 0.7
   };
 }
 
@@ -196,7 +173,7 @@ function onEachFeature(feature, layer){
   layer.on('click', ()=> {
     activeFeature = feature;
     const name = feature.properties.name || feature.properties.NAME || 'Region';
-    const arr = getEmissionsForYear(feature, currentYear) || [];
+    const arr = getEmissionsForYear(feature, currentYear);
     const v = arr[currentMonthIdx];
     document.getElementById('regionTitle').textContent = name;
     document.getElementById('infoMonth').textContent = MONTHS[currentMonthIdx];
@@ -236,7 +213,7 @@ function buildHeat(){
     heatLayer = null;
   }
   const pts = GEOJSON_DATA.features.map(f=>{
-    const arr = getEmissionsForYear(f, currentYear) || [];
+    const arr = getEmissionsForYear(f, currentYear);
     const v = arr[currentMonthIdx] ?? 0;
     const [lng, lat] = centroid(f.geometry);
     return [lat, lng, v];
@@ -273,12 +250,11 @@ function updateVisualization(){
   setOverlay(mode);
 
   if (activeFeature){
-    const arr = getEmissionsForYear(activeFeature, currentYear) || [];
+    const arr = getEmissionsForYear(activeFeature, currentYear);
     const v = arr[currentMonthIdx];
     document.getElementById('infoEmission').textContent = formatNumber(v);
     updateChart(arr);
   } else {
-    // no feature active => chart shows aggregated/selected-year placeholder
     updateChart(null);
     document.getElementById('infoEmission').textContent = '—';
   }
@@ -295,74 +271,7 @@ function updateLegend(min, max){
   `;
 }
 
-// centroid, polygonCentroidCoords helpers (kept same behavior as original)
-function centroid(geom){
-  if (!geom) return [0,0];
-  if (geom.type === 'Point') {
-    const [lng = 0, lat = 0] = geom.coordinates || [];
-    return [lng, lat];
-  }
-  if (geom.type === 'MultiPolygon') {
-    const polys = geom.coordinates || [];
-    let totalArea = 0;
-    let weightedX = 0;
-    let weightedY = 0;
-    for (let p = 0; p < polys.length; p++) {
-      const poly = polys[p];
-      if (!poly || !poly[0] || poly[0].length === 0) continue;
-      const outer = poly[0];
-      let area2 = 0;
-      for (let i = 0, j = outer.length - 1; i < outer.length; j = i++) {
-        const [x0 = 0, y0 = 0] = outer[j];
-        const [x1 = 0, y1 = 0] = outer[i];
-        area2 += x0 * y1 - x1 * y0;
-      }
-      const area = Math.abs(area2) * 0.5;
-      if (area === 0) continue;
-      const [cx, cy] = polygonCentroidCoords(outer);
-      totalArea += area;
-      weightedX += cx * area;
-      weightedY += cy * area;
-    }
-    if (totalArea === 0) return [0, 0];
-    return [weightedX / totalArea, weightedY / totalArea];
-  }
-  if (geom.type === 'Polygon') {
-    const ring = geom.coordinates && geom.coordinates[0] || [];
-    if (ring.length === 0) return [0,0];
-    let area = 0, cx = 0, cy = 0;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const [x0 = 0, y0 = 0] = ring[j];
-      const [x1 = 0, y1 = 0] = ring[i];
-      const f = x0 * y1 - x1 * y0;
-      area += f;
-      cx += (x0 + x1) * f;
-      cy += (y0 + y1) * f;
-    }
-    if (area === 0) {
-      return [ring[0]?.[0] || 0, ring[0]?.[1] || 0];
-    }
-    area *= 0.5;
-    return [cx / (6 * area), cy / (6 * area)];
-  }
-  return [0,0];
-}
-
-function polygonCentroidCoords(coords){
-  // coords: array of [lng,lat] for the ring
-  let area = 0, cx = 0, cy = 0;
-  for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-    const [x0 = 0, y0 = 0] = coords[j];
-    const [x1 = 0, y1 = 0] = coords[i];
-    const f = x0 * y1 - x1 * y0;
-    area += f;
-    cx += (x0 + x1) * f;
-    cy += (y0 + y1) * f;
-  }
-  if (area === 0) return [coords[0]?.[0] || 0, coords[0]?.[1] || 0];
-  area *= 0.5;
-  return [cx / (6 * area), cy / (6 * area)];
-}
+// ====== centroid + chart helpers stay unchanged ======
 
 // ====== CHART ======
 function initChart(){
@@ -389,7 +298,7 @@ function initChart(){
 
 function updateChart(arr){
   if (!chart) return;
-  chart.data.datasets[0].data = (arr && arr.length===12) ? arr : new Array(12).fill(null);
+  chart.data.datasets[0].data = (arr && arr.length===12) ? arr : new Array(12).fill(0);
   chart.update();
 }
 
@@ -406,21 +315,21 @@ async function loadGeoJSON(){
 
   GEOJSON_DATA = await loadGeoJSON();
 
-// Merge user data if available
-const users = JSON.parse(localStorage.getItem("users") || "{}");
-for (const [username, data] of Object.entries(users)) {
-  if (data.province && data.emissions["2024"]) {
-    let feature = GEOJSON_DATA.features.find(f => f.properties.name === data.province);
-    if (feature) {
-      feature.properties.emissions["2024"] = data.emissions["2024"];
+  // Merge user data if available
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  for (const [username, data] of Object.entries(users)) {
+    if (data.province && data.emissions) {
+      let feature = GEOJSON_DATA.features.find(f => f.properties.name === data.province);
+      if (feature) {
+        Object.keys(data.emissions).forEach(year=>{
+          feature.properties.emissions[year] = data.emissions[year];
+        });
+      }
     }
   }
-}
 
-
-  // ensure emissions properties exist & populate random placeholders if missing
+  // ensure emissions structure (default zeros if missing)
   ensureEmissionsOnFeatures(GEOJSON_DATA.features);
 
-  // build initial overlay (2024 default)
   buildChoropleth();
 })();
