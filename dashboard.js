@@ -1,4 +1,6 @@
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const YEARS = [2022, 2023, 2024];
+let currentYear = 2024;
 
 let currentUser = localStorage.getItem("currentUser");
 if (!currentUser) {
@@ -9,6 +11,16 @@ let userData = users[currentUser];
 
 document.getElementById("userName").textContent = currentUser;
 document.getElementById("userProvince").textContent = userData.province;
+
+function initYearSelector() {
+  const yearSelect = document.getElementById('yearSelect');
+  YEARS.forEach(y => {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    if (y === currentYear) opt.selected = true;
+    yearSelect.appendChild(opt);
+  });
 
 const monthInputsDiv = document.getElementById("monthInputs");
 MONTHS.forEach((m,i)=>{
@@ -40,3 +52,4 @@ function saveEmissions(){
 
   alert("Emissions updated!");
 }
+
