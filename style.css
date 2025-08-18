@@ -162,6 +162,9 @@ body{
   .unit{color:var(--muted);font-size:12px;margin-left:4px}
 }
 
-
-
-
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: var(--text);
+}
