@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signup - Carbon Calculator</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .auth-container {
+      max-width: 400px;
+      margin: 50px auto;
+      background: var(--panel);
+      padding: 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    .auth-container h2 { margin-top: 0; }
+    .auth-container label { display: block; margin: 12px 0 6px; }
+    .auth-container input, .auth-container select {
+      width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+      background: #0e1016; color: var(--text);
+    }
+    .auth-container button {
+      width: 100%; margin-top: 16px; padding: 10px;
+      background: var(--accent); border: none; border-radius: 10px; font-size: 16px;
+      cursor: pointer;
+    }
+    .toggle-pass { cursor: pointer; font-size: 13px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <h2>Signup</h2>
+    <label>Username</label>
+    <input type="text" id="signupUsername" maxlength="20" required>
+
+    <label>Province</label>
+    <select id="signupProvince">
+      <option>Lusaka</option>
+      <option>Copperbelt</option>
+      <option>Central</option>
+      <option>Eastern</option>
+      <option>Luapula</option>
+      <option>Muchinga</option>
+      <option>Northern</option>
+      <option>North-Western</option>
+      <option>Southern</option>
+      <option>Western</option>
+    </select>
+
+    <label>Password</label>
+    <input type="password" id="signupPassword" maxlength="8" required>
+    <div class="toggle-pass" onclick="togglePassword('signupPassword')">👁 Show/Hide</div>
+
+    <button onclick="signup()">Signup</button>
+    <p class="muted">Already have an account? <a href="login.html">Login</a></p>
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+</html>

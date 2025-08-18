@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - Carbon Calculator</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .dash-container { max-width: 800px; margin: 30px auto; padding: 20px; background: var(--panel); border-radius: 14px; border: 1px solid var(--border);}
+    .dash-container h2 { margin-top: 0; }
+    .month-inputs { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+    .month-inputs label { font-size: 13px; }
+    .month-inputs input { width: 100%; padding: 5px; border-radius: 6px; border: 1px solid var(--border); background:#0e1016; color: var(--text);}
+    .dash-container button { margin-top: 16px; padding: 10px; background: var(--accent); border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="dash-container">
+    <h2>Welcome, <span id="userName"></span> from <span id="userProvince"></span></h2>
+
+    <h3>Enter Monthly Emissions (kg CO₂e)</h3>
+    <div class="month-inputs" id="monthInputs"></div>
+
+    <button onclick="saveEmissions()">💾 Save & Update</button>
+    <button onclick="window.location.href='index.html'">🌍 Go to Map</button>
+
+    <h3>Your Province Emissions (Yearly Chart)</h3>
+    <canvas id="yearChart" height="120"></canvas>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
