@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Leaflet.heat (optional heat layer) -->
+  <!-- Leaflet.heat (optional heat layer) -->
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
   <!-- Chart.js for the line chart -->
@@ -17,7 +17,6 @@
 
   <!-- App styles -->
   <link rel="stylesheet" href="style.css" />
-  
 </head>
 <body>
   <div id="app">
@@ -26,24 +25,35 @@
     <aside class="sidebar">
       <header class="sidebar__header">
         <h1>🌍 Carbon Calculator Yanga - Emissions Map of Zambia</h1>
-        <p class="muted">The map shows the average emmissions per region for the year 2024</p>
+        <p class="muted">The map shows the average emissions per region for the year <span id="yearInfo">2024</span></p>
       </header>
 
       <section class="controls">
+        <!-- YEAR selector (new, above months) -->
+        <label>
+          Year:
+          <select id="yearSelect"></select>
+        </label>
+
         <label>
           Month:
           <select id="monthSelect"></select>
         </label>
+
         <label>
           Basemap:
           <select id="basemapSelect">
             <option value="osm">OpenStreetMap</option>
+            <option value="esri">Esri Imagery</option>
+            <option value="toner">Stamen Toner</option>
           </select>
         </label>
+
         <label>
           Overlay:
           <select id="overlayMode">
             <option value="choropleth">Choropleth (polygons)</option>
+            <option value="heat">Heatmap (points)</option>
           </select>
         </label>
       </section>
@@ -63,7 +73,6 @@
 
       <footer class="sidebar__footer">
         <p class="muted">Tip: drag to pan, scroll to zoom. It’s fully 2D.</p>
-       
       </footer>
     </aside>
   </div>
@@ -74,13 +83,4 @@
   <!-- App JS -->
   <script src="app.js"></script>
 </body>
-
 </html>
-
-
-
-
-
-
-
-
