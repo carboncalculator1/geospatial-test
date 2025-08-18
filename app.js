@@ -11,6 +11,8 @@ let currentYear = 2024;
 let chart;
 let GEOJSON_DATA = null;
 
+
+
 // ====== HELPERS ======
 function colorForValue(v, min, max) {
   if (v == null || isNaN(v)) return '#888888';
@@ -30,6 +32,30 @@ function colorForValue(v, min, max) {
   }
   return toRGB(r,g,b);
 }
+
+// ====== COLOR HELPERS ======
+
+// simple wrapper to keep compatibility
+function getColor(value) {
+  // Default to range 0–100 for single value styling
+  return colorForValue(value, 0, 100);
+}
+
+// factory for choropleth styles
+function styleFeatureFactory(min, max) {
+  return function (feature) {
+    const arr = getEmissionsForYear(feature, currentYear);
+    const v = arr[currentMonthIdx] || 0;
+    return {
+      fillColor: colorForValue(v, min, max),
+      weight: 1,
+      opacity: 1,
+      color: "#333",
+      fillOpacity: 0.7
+    };
+  };
+}
+
 
 function computeMinMax(features, monthIdx, year){
   let min=Infinity, max=-Infinity;
@@ -333,3 +359,4 @@ async function loadGeoJSON(){
 
   buildChoropleth();
 })();
+
