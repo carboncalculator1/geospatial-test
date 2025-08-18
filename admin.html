@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin — Carbon Calculator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .admin-wrap { max-width: 1000px; margin: 24px auto; background: var(--panel); padding: 16px; border-radius: 12px; border:1px solid var(--border); }
+    .admin-top { display:flex; gap:12px; align-items:center; }
+    .users-list { width: 340px; max-height: 70vh; overflow:auto; border-right:1px solid var(--border); padding-right:12px; }
+    .user-row { padding:8px; border-bottom:1px dashed var(--border); cursor:pointer; }
+    .user-row.online { background: rgba(40,199,111,0.06); }
+    .user-details { flex:1; padding-left:16px; overflow:auto; max-height:70vh; }
+    .meta { font-size:13px; color:var(--muted); margin-bottom:8px; }
+    .history { margin-top:12px; max-height:36vh; overflow:auto; border-top:1px solid var(--border); padding-top:8px; }
+    .history-item { padding:8px; border-bottom:1px solid rgba(255,255,255,0.02); }
+    .btn { padding:8px 10px; background:var(--accent); color:#000; border-radius:8px; border:none; cursor:pointer; }
+    .control-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+    .login-admin { max-width:420px; margin:20px auto; padding:20px; background:#0e1016; border-radius:10px; border:1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <div class="admin-wrap" id="adminWrap">
+    <h2>Admin Panel</h2>
+    <div id="adminContent"></div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
